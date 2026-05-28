@@ -492,30 +492,54 @@
         };
 
         async function callGeminiTranscription(base64, mime, apiKey) {
-            // S'utilitza el model estable de Gemini per a transcripcions
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // Llista de models en cascada de seguretat. Provem primer el model estable original (gemini-1.5-flash).
+            const modelsToTry = [
+                'gemini-1.5-flash',
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-pro'
+            ];
             
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [
-                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sense comentaris d'inici ni de final." },
-                        { inlineData: { mimeType: mime, data: base64 } }
-                    ]}]
-                })
-            });
+            let lastError = null;
+            
+            for (const model of modelsToTry) {
+                try {
+                    console.log(`Intentant transcriure amb el model actiu: ${model}...`);
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [
+                                { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, d'una manera fidel i exacta, sense comentaris teus ni salutacions de benvinguda de la IA." },
+                                { inlineData: { mimeType: mime, data: base64 } }
+                            ]}]
+                        })
+                    });
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error?.message || "Error desconegut a la petició de Gemini");
+                    if (response.ok) {
+                        const res = await response.json();
+                        if (res.candidates && res.candidates.length > 0) {
+                            return res.candidates[0].content.parts[0].text;
+                        }
+                    } else {
+                        const errData = await response.json();
+                        throw new Error(errData.error?.message || "Error de resposta");
+                    }
+                } catch (e) {
+                    console.warn(`El model ${model} ha donat un avís o error de cua:`, e.message);
+                    lastError = e;
+                    
+                    // Si la clau és de veritat incorrecta, parem de provar per no saturar
+                    if (e.message.includes("API_KEY_INVALID") || e.message.includes("not valid")) {
+                        throw new Error("La clau API no és vàlida.");
+                    }
+                }
             }
-
-            const res = await response.json();
-            if (!res.candidates || res.candidates.length === 0) {
-                throw new Error("No s'ha obtingut cap resposta de la IA.");
-            }
-            return res.candidates[0].content.parts[0].text;
+            
+            // Si hem passat per tots els models i tots han fallat
+            throw lastError || new Error("No s'ha pogut obtenir la transcripció en cap dels models lliures.");
         }
 
         document.getElementById('copyBtn').onclick = () => {
