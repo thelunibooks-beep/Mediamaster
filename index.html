@@ -194,7 +194,7 @@
         </div>
     </div>
 
-    <!-- Banners d'Instal·lació -->
+    <!-- Banners d'Instal·lació PWA -->
     <div id="pwaInstallBanner" class="fade-in">
         <div class="flex items-center gap-4 mb-4">
             <img src="https://cdn-icons-png.flaticon.com/512/3060/3060714.png" class="w-12 h-12 rounded-xl" alt="Icona App">
@@ -413,6 +413,29 @@
             }
         };
 
+        // Funció de sanejament de tipus MIME per evitar rebutjos de la IA de Google
+        function getSanitizedMimeType(file) {
+            if (file.type && file.type.trim() !== "") {
+                // El navegador de vegades utilitza "audio/x-m4a" però Google espera "audio/m4a"
+                if (file.type === "audio/x-m4a") return "audio/m4a";
+                return file.type;
+            }
+            // Si el tipus MIME és buit, el deduïm a partir de l'extensió del fitxer
+            const ext = file.name.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'mp3': return 'audio/mp3';
+                case 'm4a': return 'audio/m4a';
+                case 'wav': return 'audio/wav';
+                case 'ogg': return 'audio/ogg';
+                case 'aac': return 'audio/aac';
+                case 'flac': return 'audio/flac';
+                case 'mp4': return 'video/mp4';
+                case 'mov': return 'video/quicktime';
+                case 'avi': return 'video/x-msvideo';
+                default: return 'audio/mp3'; // Fallback de seguretat
+            }
+        }
+
         // Transcripció amb IA de Gemini
         document.getElementById('transcribeBtn').onclick = async () => {
             if (!currentFile) return;
@@ -424,9 +447,9 @@
                 return;
             }
 
-            // Comprovació de la mida del fitxer per a millor estabilitat d'IA
-            if (currentFile.size > 20 * 1024 * 1024 && currentFile.type.startsWith('video/')) {
-                showMessage("El vídeo és molt gran. Recomanem extreure primer l'àudio MP3 per transcriure.");
+            // Comprovació de la mida del fitxer per a millor estabilitat d'IA (límit ideal 20MB)
+            if (currentFile.size > 20 * 1024 * 1024) {
+                showMessage("El fitxer és molt gran. Recomanem extreure primer l'àudio MP3 per transcriure.");
             }
 
             showProgress("Llegint fitxer...", 15);
@@ -436,7 +459,9 @@
                 try {
                     showProgress("Processant amb la IA de Google...", 40);
                     const base64Data = reader.result.split(',')[1];
-                    const text = await callGeminiTranscription(base64Data, currentFile.type, apiKey);
+                    const mimeType = getSanitizedMimeType(currentFile);
+                    
+                    const text = await callGeminiTranscription(base64Data, mimeType, apiKey);
                     transcriptionContent.innerText = text;
                     showProgress("Completat", 100);
                     setTimeout(() => {
@@ -446,21 +471,23 @@
                     }, 500);
                 } catch (e) {
                     console.error(e);
-                    showMessage("Error de connexió amb la IA. Revisa la clau API.");
+                    // Ara es mostra l'error real que dóna Google en comptes del missatge genèric d'abans!
+                    showMessage("Error de la IA: " + e.message);
                     progressState.classList.add('hidden');
                 }
             };
         };
 
         async function callGeminiTranscription(base64, mime, apiKey) {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // Canviem al model ultra-estable 'gemini-1.5-flash' compatible amb totes les Claus API gratuïtes
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [
-                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sans comentaris d'inici ni de final." },
+                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sense comentaris d'inici ni de final." },
                         { inlineData: { mimeType: mime, data: base64 } }
                     ]}]
                 })
@@ -468,12 +495,13 @@
 
             if (!response.ok) {
                 const errData = await response.json();
-                throw new Error(errData.error?.message || "Error a la petició de Gemini");
+                // Retorna l'error detallat de Google per facilitar la diagnosi
+                throw new Error(errData.error?.message || "Error desconegut a la petició de Gemini");
             }
 
             const res = await response.json();
             if (!res.candidates || res.candidates.length === 0) {
-                throw new Error("No s'ha obtingut resposta de la IA");
+                throw new Error("No s'ha obtingut cap resposta de la IA.");
             }
             return res.candidates[0].content.parts[0].text;
         }
@@ -541,7 +569,7 @@
             setTimeout(() => {
                 b.classList.remove('translate-y-0');
                 b.classList.add('translate-y-32');
-            }, 3000);
+            }, 6000); // 6 segons perquè puguin llegir els errors detallats amb calma
         }
     </script>
 </body>
