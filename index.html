@@ -9,9 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="Ocom Àudio">
     <meta name="description" content="Extractor i Transcriptor Professional de Multimèdia">
     
-    <!-- Icones PWA -->
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3060/3060714.png">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3060/3060714.png">
+    <!-- Icones PWA (Nova icona seleccionada de Flaticon) -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2710/2710300.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2710/2710300.png">
 
     <title>Ocom Àudio Transcripcions</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -194,10 +194,10 @@
         </div>
     </div>
 
-    <!-- Banners d'Instal·lació PWA -->
+    <!-- Banners d'Instal·lació PWA amb la nova icona -->
     <div id="pwaInstallBanner" class="fade-in">
         <div class="flex items-center gap-4 mb-4">
-            <img src="https://cdn-icons-png.flaticon.com/512/3060/3060714.png" class="w-12 h-12 rounded-xl" alt="Icona App">
+            <img src="https://cdn-icons-png.flaticon.com/512/2710/2710300.png" class="w-12 h-12 rounded-xl" alt="Icona App">
             <div class="flex-1">
                 <p class="font-black text-white">Instal·lar Ocom Àudio</p>
                 <p id="pwaDesc" class="text-xs text-slate-400">Utilitza l'eina de transcripció com una App nativa al mòbil.</p>
@@ -225,7 +225,7 @@
             "background_color": "#ffffff",
             "theme_color": "#002D62",
             "description": "Eina professional de transcripció d'àudio i vídeo amb IA",
-            "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/3060/3060714.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+            "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/2710/2710300.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
         };
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const manifestLink = document.createElement('link');
@@ -416,11 +416,9 @@
         // Funció de sanejament de tipus MIME per evitar rebutjos de la IA de Google
         function getSanitizedMimeType(file) {
             if (file.type && file.type.trim() !== "") {
-                // El navegador de vegades utilitza "audio/x-m4a" però Google espera "audio/m4a"
                 if (file.type === "audio/x-m4a") return "audio/m4a";
                 return file.type;
             }
-            // Si el tipus MIME és buit, el deduïm a partir de l'extensió del fitxer
             const ext = file.name.split('.').pop().toLowerCase();
             switch (ext) {
                 case 'mp3': return 'audio/mp3';
@@ -432,7 +430,7 @@
                 case 'mp4': return 'video/mp4';
                 case 'mov': return 'video/quicktime';
                 case 'avi': return 'video/x-msvideo';
-                default: return 'audio/mp3'; // Fallback de seguretat
+                default: return 'audio/mp3';
             }
         }
 
@@ -447,7 +445,6 @@
                 return;
             }
 
-            // Comprovació de la mida del fitxer per a millor estabilitat d'IA (límit ideal 20MB)
             if (currentFile.size > 20 * 1024 * 1024) {
                 showMessage("El fitxer és molt gran. Recomanem extreure primer l'àudio MP3 per transcriure.");
             }
@@ -471,7 +468,6 @@
                     }, 500);
                 } catch (e) {
                     console.error(e);
-                    // Ara es mostra l'error real que dóna Google en comptes del missatge genèric d'abans!
                     showMessage("Error de la IA: " + e.message);
                     progressState.classList.add('hidden');
                 }
@@ -479,15 +475,15 @@
         };
 
         async function callGeminiTranscription(base64, mime, apiKey) {
-            // Canviem al model ultra-estable 'gemini-1.5-flash' compatible amb totes les Claus API gratuïtes
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // S'utilitza el model oficial d'alta velocitat i precisió gemini-2.5-flash
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [
-                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sense comentaris d'inici ni de final." },
+                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sans comentaris d'inici ni de final." },
                         { inlineData: { mimeType: mime, data: base64 } }
                     ]}]
                 })
@@ -495,7 +491,6 @@
 
             if (!response.ok) {
                 const errData = await response.json();
-                // Retorna l'error detallat de Google per facilitar la diagnosi
                 throw new Error(errData.error?.message || "Error desconegut a la petició de Gemini");
             }
 
@@ -569,7 +564,7 @@
             setTimeout(() => {
                 b.classList.remove('translate-y-0');
                 b.classList.add('translate-y-32');
-            }, 6000); // 6 segons perquè puguin llegir els errors detallats amb calma
+            }, 6000); // 6 segons de marge de lectura
         }
     </script>
 </body>
