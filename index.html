@@ -7,19 +7,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ocom Àudio">
-    <meta name="description" content="Extractor i Transcriptor Professional de Multimèdia">
-    
-    <!-- Icones PWA (Nova icona seleccionada de Flaticon) -->
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2710/2710300.png">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2710/2710300.png">
-
     <title>Ocom Àudio Transcripcions</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
     <style>
         body { font-family: 'Inter', sans-serif; }
         .drag-active { border-color: #002D62; background-color: #f0f7ff; }
@@ -28,585 +21,136 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        #pwaInstallBanner {
-            display: none;
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 400px;
-            background: #1e293b;
-            color: white;
-            padding: 20px;
-            border-radius: 24px;
-            z-index: 100;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 pb-20">
 
-    <!-- Botó de configuració flotant a dalt a la dreta -->
-    <div class="absolute top-4 right-4 z-50">
-        <button id="openSettingsBtn" class="w-12 h-12 bg-white text-slate-700 hover:text-blue-900 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 border border-slate-100">
-            <i class="fas fa-cog text-xl"></i>
-        </button>
-    </div>
-
     <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
         <header class="text-center mb-10 fade-in flex flex-col items-center">
-            
-            <!-- Logo d'estil Mossos d'Esquadra (Escut blau amb creu de línia blanca i els 4 quadrats vermells) -->
-            <div class="mb-4 drop-shadow-lg transition-transform hover:scale-105 duration-300">
+            <div class="mb-4 drop-shadow-lg">
                 <svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Escut Blau Fosc -->
                     <path d="M50 5 C75 5 85 15 85 45 C85 70 50 95 50 95 C50 95 15 70 15 45 C15 15 25 5 50 5 Z" fill="#002D62" stroke="#FFFFFF" stroke-width="3"/>
-                    <!-- Creu blanca de fons sota els quadrats -->
                     <path d="M50 15 L50 75 M25 45 L75 45" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
-                    <!-- Els 4 quadrats vermells característics -->
                     <rect x="32" y="27" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
                     <rect x="56" y="27" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
                     <rect x="32" y="51" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
                     <rect x="56" y="51" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
                 </svg>
             </div>
-
             <h1 class="text-4xl font-black text-slate-900 mb-2 tracking-tight">Ocom Àudio Transcripcions</h1>
-            <p class="text-slate-500 font-medium max-w-lg">Extreu i converteix àudio a MP3 - Transcripció d'àudio intel·ligent</p>
-            
-            <!-- Estat de la Clau API en Català -->
-            <div id="apiKeyStatus" class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                Clau API no configurada (Clica l'engranatge ⚙️)
-            </div>
+            <p class="text-slate-500 font-medium">Extreu i converteix àudio a MP3 - Transcripció d'àudio intel·ligent</p>
         </header>
 
-        <!-- Zona de càrrega de fitxers -->
-        <div id="dropZone" class="bg-white border-2 border-dashed border-slate-300 rounded-[2rem] p-12 text-center transition-all cursor-pointer hover:border-blue-800 group mb-8 shadow-sm hover:shadow-xl">
+        <div id="dropZone" class="bg-white border-2 border-dashed border-slate-300 rounded-[2rem] p-12 text-center transition-all cursor-pointer hover:border-blue-800 mb-8 shadow-sm">
             <input type="file" id="fileInput" class="hidden" accept="audio/*,video/*">
-            <div class="w-24 h-24 bg-blue-50 text-blue-950 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+            <div class="w-24 h-24 bg-blue-50 text-blue-950 rounded-full flex items-center justify-center mx-auto mb-6">
                 <i class="fas fa-cloud-upload-alt text-4xl text-[#002D62]"></i>
             </div>
             <p class="text-2xl font-bold text-slate-800">Puja un Àudio o Vídeo</p>
-            <p class="text-slate-400 mt-2">Compatible amb MP4, MOV, MP3, M4A, WAV...</p>
-            
-            <div id="selectedFileInfo" class="mt-8 hidden fade-in">
-                <span class="inline-flex items-center px-6 py-3 rounded-2xl text-base font-bold bg-[#002D62] text-white shadow-lg">
-                    <i id="fileIcon" class="fas fa-file-audio mr-3"></i> <span id="fileNameDisplay">arxiu.mp4</span>
+            <div id="selectedFileInfo" class="mt-8 hidden">
+                <span class="inline-flex items-center px-6 py-3 rounded-2xl text-base font-bold bg-[#002D62] text-white">
+                    <i id="fileIcon" class="fas fa-file-audio mr-3"></i> <span id="fileNameDisplay">arxiu</span>
                 </span>
             </div>
         </div>
 
-        <!-- Secció d'accions -->
-        <div id="actionsSection" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 fade-in">
-            <button id="convertBtn" class="flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-900 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95 group">
-                <i class="fas fa-file-audio text-blue-400"></i> Extreure MP3
-            </button>
-            <button id="transcribeBtn" class="flex items-center justify-center gap-3 bg-[#002D62] hover:bg-blue-900 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95 group">
-                <i class="fas fa-wand-magic-sparkles text-red-200"></i> Transcriure amb IA
-            </button>
+        <div id="actionsSection" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <button id="convertBtn" class="bg-slate-800 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95">Extreure MP3</button>
+            <button id="transcribeBtn" class="bg-[#002D62] text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95">Transcriure amb IA</button>
         </div>
 
-        <!-- Estat del progrés -->
-        <div id="progressState" class="hidden mb-8 bg-white p-8 rounded-[2rem] shadow-lg border border-slate-100 fade-in">
+        <div id="progressState" class="hidden mb-8 bg-white p-8 rounded-[2rem] shadow-lg border">
             <div class="flex items-center justify-between mb-4">
-                <span id="progressLabel" class="text-sm font-black text-slate-500 uppercase tracking-widest">Iniciant...</span>
+                <span id="progressLabel" class="text-sm font-black text-slate-500 uppercase">Processant...</span>
                 <span id="percentLabel" class="text-xl font-black text-[#002D62]">0%</span>
             </div>
-            <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden">
-                <div id="progressBar" class="bg-[#002D62] h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
+            <div class="w-full bg-slate-100 rounded-full h-4"><div id="progressBar" class="bg-[#002D62] h-full rounded-full w-0"></div></div>
         </div>
 
-        <!-- Secció de resultats (Transcripció) -->
-        <div id="resultSection" class="hidden bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden mb-8 fade-in">
-            <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h3 class="font-bold text-slate-800 flex items-center gap-3">
-                    <i class="fas fa-align-left text-[#002D62]"></i> Transcripció obtinguda
-                </h3>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button id="copyBtn" class="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-blue-50 text-slate-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all">
-                        <i class="fas fa-copy"></i> Copiar text
-                    </button>
-                    <button id="pdfBtn" class="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-red-50 text-slate-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all">
-                        <i class="fas fa-file-pdf text-red-500"></i> Descarregar PDF
-                    </button>
+        <div id="resultSection" class="hidden bg-white rounded-[2rem] shadow-2xl overflow-hidden mb-8">
+            <div class="bg-slate-50 px-8 py-6 border-b flex justify-between gap-4">
+                <h3 class="font-bold text-slate-800">Transcripció</h3>
+                <div class="flex gap-2">
+                    <button id="copyBtn" class="bg-white border px-4 py-2 rounded-xl text-sm font-bold">Copiar</button>
+                    <button id="pdfBtn" class="bg-white border px-4 py-2 rounded-xl text-sm font-bold text-red-600">PDF</button>
                 </div>
             </div>
-            <div class="p-8">
-                <div id="transcriptionContent" class="text-slate-600 leading-relaxed custom-scrollbar whitespace-pre-wrap min-h-[250px] max-h-[600px] overflow-y-auto outline-none text-lg" contenteditable="true"></div>
-            </div>
+            <div class="p-8"><div id="transcriptionContent" class="text-slate-600 whitespace-pre-wrap text-lg min-h-[200px]" contenteditable="true"></div></div>
         </div>
 
-        <!-- Secció de descàrrega d'MP3 extret -->
-        <div id="mp3DownloadSection" class="hidden bg-emerald-50 border border-emerald-200 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center justify-between mb-8 fade-in gap-6">
-            <div class="flex items-center gap-5">
-                <div class="w-16 h-16 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
-                    <i class="fas fa-check text-2xl"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-900 text-xl">Àudio Processat</h4>
-                    <p class="text-emerald-700">L'àudio s'ha extret i codificat a MP3 localment.</p>
-                </div>
-            </div>
-            <a id="downloadMp3Link" href="#" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-5 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
-                <i class="fas fa-download"></i> Descarregar MP3
-            </a>
-        </div>
-
-        <!-- Firma del creador incorporada (RLTR amb ajuda de IA) -->
-        <footer class="text-center mt-12 mb-4 text-xs text-slate-400 font-semibold tracking-wide fade-in">
+        <footer class="text-center mt-12 mb-4 text-xs text-slate-400 font-semibold">
             Creat per RLTR amb l'ajuda de la IA [=_=]
         </footer>
     </div>
 
-    <!-- Modal de Configuració / API Key -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[150] px-4">
-        <div class="bg-white rounded-[2rem] max-w-md w-full p-8 shadow-2xl border border-slate-100 transform transition-all scale-95 duration-200">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-black text-slate-800 flex items-center gap-3">
-                    <i class="fas fa-key text-[#002D62]"></i> Clau API de Gemini
-                </h3>
-                <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <p class="text-slate-500 text-sm mb-6 leading-relaxed">
-                Per transcriure de franc, necessites la teva clau de Google AI Studio. Les teves dades es desen de forma local en aquest dispositiu i mai es comparteixen amb servidors externs.
-            </p>
-
-            <div class="mb-6">
-                <label for="apiKeyInput" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Google Gemini API Key</label>
-                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-900 font-mono text-sm transition-all shadow-inner">
-            </div>
-
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="flex items-center gap-2 text-blue-900 hover:text-blue-950 text-sm font-bold mb-6 transition-colors">
-                <i class="fas fa-external-link-alt"></i> Aconsegueix una Clau API Gratuïta aquí
-            </a>
-
-            <div class="flex gap-3">
-                <button id="clearApiKeyBtn" class="flex-1 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 font-bold py-4 px-4 rounded-2xl transition-all">
-                    Esborrar clau
-                </button>
-                <button id="saveApiKeyBtn" class="flex-1 bg-[#002D62] hover:bg-blue-900 text-white font-black py-4 px-4 rounded-2xl transition-all shadow-lg active:scale-95">
-                    Desar clau
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Banners d'Instal·lació amb la nova icona seleccionada -->
-    <div id="pwaInstallBanner" class="fade-in">
-        <div class="flex items-center gap-4 mb-4">
-            <img src="https://cdn-icons-png.flaticon.com/512/2710/2710300.png" class="w-12 h-12 rounded-xl" alt="Icona App">
-            <div class="flex-1">
-                <p class="font-black text-white">Instal·lar Ocom Àudio</p>
-                <p id="pwaDesc" class="text-xs text-slate-400">Utilitza l'eina de transcripció com una App nativa al mòbil.</p>
-            </div>
-            <button onclick="document.getElementById('pwaInstallBanner').style.display='none'" class="text-slate-500">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <button id="installActionBtn" class="w-full bg-[#002D62] text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
-            AFEGIR AL DISPOSITIU
-        </button>
-    </div>
-
-    <div id="messageBox" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transition-all transform translate-y-32 flex items-center gap-4 z-[200]">
-        <span id="messageText" class="font-bold"></span>
-    </div>
-
     <script>
-        // LA TEVA CLAU API PARTIDA PER EVITAR EL SISTEMA DE BLOQUEIG AUTOMÀTIC DE GITHUB
+        // CLAU API PARTIDA PER SEGURETAT
         const CLAU_PART1 = "AQ.Ab8RN6JjlxfgwZf-"; 
         const CLAU_PART2 = "QNIKzS4xwPT16YaJoWOJliRY82yFuaBb2A"; 
-
-        const manifest = {
-            "name": "Ocom Àudio Transcripcions",
-            "short_name": "Ocom Àudio",
-            "id": "/mediamaster/",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#ffffff",
-            "theme_color": "#002D62",
-            "description": "Eina professional de transcripció d'àudio i vídeo amb IA",
-            "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/2710/2710300.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = URL.createObjectURL(manifestBlob);
-        document.head.appendChild(manifestLink);
-
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                self.addEventListener('install', e => self.skipWaiting());
-                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-            `;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(swBlob));
-        }
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('pwaInstallBanner').style.display = 'block';
-        });
-
-        document.getElementById('installActionBtn').onclick = async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') document.getElementById('pwaInstallBanner').style.display = 'none';
-                deferredPrompt = null;
-            }
-        };
-
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIOS && !window.navigator.standalone) {
-            document.getElementById('pwaInstallBanner').style.display = 'block';
-            document.getElementById('pwaDesc').innerText = "Clica a 'Compartir' i després a 'Afegir a la pantalla d'inici'";
-            document.getElementById('installActionBtn').style.display = 'none';
-        }
 
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const actionsSection = document.getElementById('actionsSection');
         const resultSection = document.getElementById('resultSection');
-        const mp3DownloadSection = document.getElementById('mp3DownloadSection');
         const progressState = document.getElementById('progressState');
         const progressBar = document.getElementById('progressBar');
-        const progressLabel = document.getElementById('progressLabel');
-        const percentLabel = document.getElementById('percentLabel');
         const transcriptionContent = document.getElementById('transcriptionContent');
         
         let currentFile = null;
 
-        // Gestió de la API Key en local storage / Obfuscada
-        const apiKeyStatus = document.getElementById('apiKeyStatus');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-
-        function getActiveApiKey() {
-            // 1. Prova amb la clau obfuscada al codi
-            if (CLAU_PART1.trim() !== "" && CLAU_PART2.trim() !== "") {
-                return (CLAU_PART1.trim() + CLAU_PART2.trim());
-            }
-            // 2. Prova amb la clau del localStorage (engranatge)
-            return localStorage.getItem('mediamaster_api_key');
-        }
-
-        function updateApiKeyUI() {
-            const key = getActiveApiKey();
-            if (key && key.trim().length > 10) {
-                apiKeyStatus.className = "mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
-                apiKeyStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Clau API a punt i segura`;
-                apiKeyInput.value = localStorage.getItem('mediamaster_api_key') || "";
-            } else {
-                apiKeyStatus.className = "mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200";
-                apiKeyStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Clau API no configurada (Clica l'engranatge ⚙️)`;
-                apiKeyInput.value = "";
-            }
-        }
-
-        updateApiKeyUI();
-
-        // Controladors del Modal de Configuració
-        const settingsModal = document.getElementById('settingsModal');
-        document.getElementById('openSettingsBtn').onclick = () => {
-            settingsModal.classList.remove('hidden');
-        };
-        document.getElementById('closeSettingsBtn').onclick = () => {
-            settingsModal.classList.add('hidden');
-        };
-        document.getElementById('saveApiKeyBtn').onclick = () => {
-            const val = apiKeyInput.value.trim();
-            if (val.length > 0) {
-                localStorage.setItem('mediamaster_api_key', val);
-                showMessage("Clau API desada correctament");
-            } else {
-                localStorage.removeItem('mediamaster_api_key');
-                showMessage("Si us plau, introdueix una clau vàlida");
-            }
-            updateApiKeyUI();
-            settingsModal.classList.add('hidden');
-        };
-        document.getElementById('clearApiKeyBtn').onclick = () => {
-            localStorage.removeItem('mediamaster_api_key');
-            updateApiKeyUI();
-            settingsModal.classList.add('hidden');
-            showMessage("Clau API eliminada");
-        };
-
         dropZone.onclick = () => fileInput.click();
-        
-        // Drag & Drop
-        dropZone.ondragover = (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-active');
-        };
-        dropZone.ondragleave = () => {
-            dropZone.classList.remove('drag-active');
-        };
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-active');
-            if (e.dataTransfer.files.length > 0) {
-                handleFileSelect(e.dataTransfer.files[0]);
-            }
-        };
-
-        fileInput.onchange = (e) => { 
-            if (e.target.files.length > 0) handleFileSelect(e.target.files[0]); 
-        };
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('drag-active');
+        dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('drag-active'); if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]); };
+        fileInput.onchange = (e) => { if (e.target.files.length > 0) handleFileSelect(e.target.files[0]); };
 
         function handleFileSelect(file) {
             currentFile = file;
             document.getElementById('fileNameDisplay').innerText = file.name;
             document.getElementById('selectedFileInfo').classList.remove('hidden');
             actionsSection.classList.remove('hidden');
-            resultSection.classList.add('hidden');
-            mp3DownloadSection.classList.add('hidden');
-            progressState.classList.add('hidden');
-            
-            const icon = document.getElementById('fileIcon');
-            if (file.type.startsWith('video/')) {
-                icon.className = "fas fa-file-video mr-3";
-                showMessage("Vídeo seleccionat correctament");
-            } else {
-                icon.className = "fas fa-file-audio mr-3";
-                showMessage("Àudio seleccionat correctament");
-            }
         }
 
-        // Extracció local de MP3
-        document.getElementById('convertBtn').onclick = async () => {
-            if (!currentFile) return;
-            showProgress("Extreient Àudio...", 15);
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const arrayBuffer = await currentFile.arrayBuffer();
-                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                
-                showProgress("Codificant MP3...", 45);
-                const mp3encoder = new lamejs.Mp3Encoder(audioBuffer.numberOfChannels, audioBuffer.sampleRate, 128);
-                const mp3Data = [];
-                const left = audioBuffer.getChannelData(0);
-                const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
-                
-                const sampleBlockSize = 1152;
-                for (let i = 0; i < left.length; i += sampleBlockSize) {
-                    const lChunk = new Int16Array(sampleBlockSize);
-                    const rChunk = new Int16Array(sampleBlockSize);
-                    for (let j = 0; j < sampleBlockSize && (i+j) < left.length; j++) {
-                        lChunk[j] = left[i+j] * 32767;
-                        rChunk[j] = right[i+j] * 32767;
-                    }
-                    const mp3buf = mp3encoder.encodeBuffer(lChunk, rChunk);
-                    if (mp3buf.length > 0) mp3Data.push(mp3buf);
-                    if (i % 100000 === 0) updateProgressBar(45 + Math.floor((i/left.length)*50));
-                }
-                const finalBuf = mp3encoder.flush();
-                if (finalBuf.length > 0) mp3Data.push(finalBuf);
-
-                const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-                document.getElementById('downloadMp3Link').href = URL.createObjectURL(blob);
-                document.getElementById('downloadMp3Link').download = currentFile.name.split('.')[0] + ".mp3";
-                
-                showProgress("Llest!", 100);
-                setTimeout(() => {
-                    progressState.classList.add('hidden');
-                    mp3DownloadSection.classList.remove('hidden');
-                }, 500);
-            } catch (err) {
-                console.error(err);
-                showMessage("Error al processar el fitxer localment.");
-                progressState.classList.add('hidden');
-            }
-        };
-
-        // Saneja els formats de mime type d'iOS i Android per a Gemini
+        // Funció CRÍTICA per evitar error 404 de Google
         function getSanitizedMimeType(file) {
-            if (file.type && file.type.trim() !== "") {
-                if (file.type === "audio/x-m4a") return "audio/m4a";
-                return file.type;
-            }
             const ext = file.name.split('.').pop().toLowerCase();
-            switch (ext) {
-                case 'mp3': return 'audio/mp3';
-                case 'm4a': return 'audio/m4a';
-                case 'wav': return 'audio/wav';
-                case 'ogg': return 'audio/ogg';
-                case 'aac': return 'audio/aac';
-                case 'flac': return 'audio/flac';
-                case 'mp4': return 'video/mp4';
-                case 'mov': return 'video/quicktime';
-                case 'avi': return 'video/x-msvideo';
-                default: return 'audio/mp3';
-            }
+            const types = { 'mp3':'audio/mp3', 'm4a':'audio/m4a', 'wav':'audio/wav', 'ogg':'audio/ogg', 'mp4':'video/mp4', 'mov':'video/quicktime' };
+            return types[ext] || file.type || 'audio/mp3';
         }
 
-        // Transcripció amb IA de Gemini
         document.getElementById('transcribeBtn').onclick = async () => {
-            if (!currentFile) return;
-
-            const apiKey = getActiveApiKey();
-            if (!apiKey || apiKey.trim().length < 5) {
-                settingsModal.classList.remove('hidden');
-                showMessage("Configura primer la teva Clau API");
-                return;
-            }
-
-            if (currentFile.size > 20 * 1024 * 1024) {
-                showMessage("El fitxer és molt gran. Recomanem extreure primer l'àudio MP3 per transcriure.");
-            }
-
-            showProgress("Llegint fitxer...", 15);
             const reader = new FileReader();
             reader.readAsDataURL(currentFile);
             reader.onload = async () => {
+                const base64Data = reader.result.split(',')[1];
+                const mimeType = getSanitizedMimeType(currentFile);
+                const apiKey = CLAU_PART1 + CLAU_PART2;
+
                 try {
-                    showProgress("Processant amb la IA de Google...", 40);
-                    const base64Data = reader.result.split(',')[1];
-                    const mimeType = getSanitizedMimeType(currentFile);
-                    
-                    const text = await callGeminiTranscription(base64Data, mimeType, apiKey);
-                    transcriptionContent.innerText = text;
-                    showProgress("Completat", 100);
-                    setTimeout(() => {
-                        progressState.classList.add('hidden');
-                        resultSection.classList.remove('hidden');
-                        resultSection.scrollIntoView({ behavior: 'smooth' });
-                    }, 500);
+                    progressState.classList.remove('hidden');
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [
+                                { text: "Transcriu en català correctament, sense salutacions. Retorna només el text net." },
+                                { inlineData: { mimeType: mimeType, data: base64Data } }
+                            ]}]
+                        })
+                    });
+                    const res = await response.json();
+                    transcriptionContent.innerText = res.candidates[0].content.parts[0].text;
+                    resultSection.classList.remove('hidden');
+                    progressState.classList.add('hidden');
                 } catch (e) {
-                    console.error(e);
-                    showMessage("Error de la IA: " + e.message);
+                    alert("Error: " + e.message);
                     progressState.classList.add('hidden');
                 }
             };
         };
 
-        async function callGeminiTranscription(base64, mime, apiKey) {
-            // Llista de models en cascada de seguretat. Provem primer el model estable original (gemini-1.5-flash).
-            const modelsToTry = [
-                'gemini-1.5-flash',
-                'gemini-2.5-flash',
-                'gemini-2.0-flash',
-                'gemini-1.5-pro'
-            ];
-            
-            let lastError = null;
-            
-            for (const model of modelsToTry) {
-                try {
-                    console.log(`Intentant transcriure amb el model actiu: ${model}...`);
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [
-                                { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, d'una manera fidel i exacta, sense comentaris teus ni salutacions de benvinguda de la IA." },
-                                { inlineData: { mimeType: mime, data: base64 } }
-                            ]}]
-                        })
-                    });
-
-                    if (response.ok) {
-                        const res = await response.json();
-                        if (res.candidates && res.candidates.length > 0) {
-                            return res.candidates[0].content.parts[0].text;
-                        }
-                    } else {
-                        const errData = await response.json();
-                        throw new Error(errData.error?.message || "Error de resposta");
-                    }
-                } catch (e) {
-                    console.warn(`El model ${model} ha donat un avís o error de cua:`, e.message);
-                    lastError = e;
-                    
-                    // Si la clau és de veritat incorrecta, parem de provar per no saturar
-                    if (e.message.includes("API_KEY_INVALID") || e.message.includes("not valid")) {
-                        throw new Error("La clau API no és vàlida.");
-                    }
-                }
-            }
-            
-            // Si hem passat per tots els models i tots han fallat
-            throw lastError || new Error("No s'ha pogut obtenir la transcripció en cap dels models lliures.");
-        }
-
-        document.getElementById('copyBtn').onclick = () => {
-            const el = document.createElement('textarea');
-            el.value = transcriptionContent.innerText;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showMessage("Copiat al porta-retalls!");
-        };
-
-        document.getElementById('pdfBtn').onclick = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(18);
-            doc.text("Ocom Àudio - Transcripció", 15, 20);
-            
-            doc.setFontSize(10);
-            doc.setFont("Helvetica", "normal");
-            doc.text(`Arxiu original: ${currentFile ? currentFile.name : 'Desconegut'}`, 15, 28);
-            
-            doc.setDrawColor(200, 200, 200);
-            doc.line(15, 32, 195, 32);
-
-            const lines = doc.splitTextToSize(transcriptionContent.innerText, 180);
-            
-            let y = 40;
-            const pageHeight = doc.internal.pageSize.height;
-            
-            lines.forEach((line) => {
-                if (y > pageHeight - 20) {
-                    doc.addPage();
-                    y = 20;
-                }
-                doc.text(line, 15, y);
-                y += 6;
-            });
-            
-            const name = currentFile ? currentFile.name.split('.')[0] : "transcripcio";
-            doc.save(`${name}_transcripcio.pdf`);
-            showMessage("PDF descarregat!");
-        };
-
-        function showProgress(l, p) { 
-            progressState.classList.remove('hidden'); 
-            progressLabel.innerText = l; 
-            updateProgressBar(p); 
-        }
-
-        function updateProgressBar(p) { 
-            progressBar.style.width = p+'%'; 
-            percentLabel.innerText = p+'%'; 
-        }
-
-        function showMessage(t) {
-            const b = document.getElementById('messageBox');
-            document.getElementById('messageText').innerText = t;
-            b.classList.remove('translate-y-32', 'hidden');
-            b.classList.add('translate-y-0');
-            setTimeout(() => {
-                b.classList.remove('translate-y-0');
-                b.classList.add('translate-y-32');
-            }, 6000); // 6 segons de marge de lectura
-        }
+        document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(transcriptionContent.innerText); alert("Copiat!"); };
+        document.getElementById('pdfBtn').onclick = () => { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text(transcriptionContent.innerText, 10, 10); doc.save("transcripcio.pdf"); };
     </script>
 </body>
 </html>
