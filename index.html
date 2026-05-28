@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#002D62">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MediaMaster">
+    <meta name="apple-mobile-web-app-title" content="Ocom Àudio">
+    <meta name="description" content="Extractor i Transcriptor Professional de Multimèdia">
     
-    <!-- Iconos PWA -->
+    <!-- Icones PWA -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3060/3060714.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3060/3060714.png">
 
-    <title>MediaMaster - PWA Pro</title>
+    <title>Ocom Àudio Transcripcions</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .drag-active { border-color: #4f46e5; background-color: #f5f3ff; }
+        .drag-active { border-color: #002D62; background-color: #f0f7ff; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -48,60 +49,90 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 pb-20">
 
+    <!-- Botó de configuració flotant a dalt a la dreta -->
+    <div class="absolute top-4 right-4 z-50">
+        <button id="openSettingsBtn" class="w-12 h-12 bg-white text-slate-700 hover:text-blue-900 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 border border-slate-100">
+            <i class="fas fa-cog text-xl"></i>
+        </button>
+    </div>
+
     <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
-        <header class="text-center mb-10 fade-in">
-            <div class="inline-block p-4 bg-indigo-600 rounded-3xl mb-4 shadow-xl shadow-indigo-200">
-                <i class="fas fa-microphone-alt text-4xl text-white"></i>
+        <header class="text-center mb-10 fade-in flex flex-col items-center">
+            
+            <!-- Logo d'estil Mossos d'Esquadra (Escut blau amb creu de línia blanca i els 4 quadrats vermells) -->
+            <div class="mb-4 drop-shadow-lg transition-transform hover:scale-105 duration-300">
+                <svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Escut Blau Fosc -->
+                    <path d="M50 5 C75 5 85 15 85 45 C85 70 50 95 50 95 C50 95 15 70 15 45 C15 15 25 5 50 5 Z" fill="#002D62" stroke="#FFFFFF" stroke-width="3"/>
+                    <!-- Creu blanca de fons sota els quadrats -->
+                    <path d="M50 15 L50 75 M25 45 L75 45" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+                    <!-- Els 4 quadrats vermells característics -->
+                    <rect x="32" y="27" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
+                    <rect x="56" y="27" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
+                    <rect x="32" y="51" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
+                    <rect x="56" y="51" width="12" height="12" rx="2" fill="#E31B23" stroke="#FFFFFF" stroke-width="1.5" />
+                </svg>
             </div>
-            <h1 class="text-4xl font-black text-slate-900 mb-2 tracking-tight">MediaMaster <span class="text-indigo-600 italic">PWA</span></h1>
-            <p class="text-slate-500 font-medium">Extrae audio y transcribe con IA. Sin lÃ­mites.</p>
+
+            <h1 class="text-4xl font-black text-slate-900 mb-2 tracking-tight">Ocom Àudio Transcripcions</h1>
+            <p class="text-slate-500 font-medium max-w-lg">Extreu i converteix àudio a MP3 - Transcripció d'àudio intel·ligent</p>
+            
+            <!-- Estat de la Clau API en Català -->
+            <div id="apiKeyStatus" class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Clau API no configurada (Clica l'engranatge ⚙️)
+            </div>
         </header>
 
-        <div id="dropZone" class="bg-white border-2 border-dashed border-slate-300 rounded-[2rem] p-12 text-center transition-all cursor-pointer hover:border-indigo-500 group mb-8 shadow-sm hover:shadow-xl">
+        <!-- Zona de càrrega de fitxers -->
+        <div id="dropZone" class="bg-white border-2 border-dashed border-slate-300 rounded-[2rem] p-12 text-center transition-all cursor-pointer hover:border-blue-800 group mb-8 shadow-sm hover:shadow-xl">
             <input type="file" id="fileInput" class="hidden" accept="audio/*,video/*">
-            <div class="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
-                <i class="fas fa-cloud-upload-alt text-4xl"></i>
+            <div class="w-24 h-24 bg-blue-50 text-blue-950 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+                <i class="fas fa-cloud-upload-alt text-4xl text-[#002D62]"></i>
             </div>
-            <p class="text-2xl font-bold text-slate-800">Sube un Audio o Video</p>
-            <p class="text-slate-400 mt-2">Compatible con MP4, MOV, MP3, M4A...</p>
+            <p class="text-2xl font-bold text-slate-800">Puja un Àudio o Vídeo</p>
+            <p class="text-slate-400 mt-2">Compatible amb MP4, MOV, MP3, M4A, WAV...</p>
             
             <div id="selectedFileInfo" class="mt-8 hidden fade-in">
-                <span class="inline-flex items-center px-6 py-3 rounded-2xl text-base font-bold bg-indigo-600 text-white shadow-lg">
-                    <i id="fileIcon" class="fas fa-file-audio mr-3"></i> <span id="fileNameDisplay">archivo.mp4</span>
+                <span class="inline-flex items-center px-6 py-3 rounded-2xl text-base font-bold bg-[#002D62] text-white shadow-lg">
+                    <i id="fileIcon" class="fas fa-file-audio mr-3"></i> <span id="fileNameDisplay">arxiu.mp4</span>
                 </span>
             </div>
         </div>
 
+        <!-- Secció d'accions -->
         <div id="actionsSection" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 fade-in">
             <button id="convertBtn" class="flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-900 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95 group">
-                <i class="fas fa-file-audio text-indigo-400"></i> Extraer MP3
+                <i class="fas fa-file-audio text-blue-400"></i> Extreure MP3
             </button>
-            <button id="transcribeBtn" class="flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95 group">
-                <i class="fas fa-wand-magic-sparkles text-indigo-200"></i> Transcribir IA
+            <button id="transcribeBtn" class="flex items-center justify-center gap-3 bg-[#002D62] hover:bg-blue-900 text-white font-bold py-6 px-6 rounded-3xl transition-all shadow-xl active:scale-95 group">
+                <i class="fas fa-wand-magic-sparkles text-red-200"></i> Transcriure amb IA
             </button>
         </div>
 
+        <!-- Estat del progrés -->
         <div id="progressState" class="hidden mb-8 bg-white p-8 rounded-[2rem] shadow-lg border border-slate-100 fade-in">
             <div class="flex items-center justify-between mb-4">
-                <span id="progressLabel" class="text-sm font-black text-slate-500 uppercase tracking-widest">Iniciando...</span>
-                <span id="percentLabel" class="text-xl font-black text-indigo-600">0%</span>
+                <span id="progressLabel" class="text-sm font-black text-slate-500 uppercase tracking-widest">Iniciant...</span>
+                <span id="percentLabel" class="text-xl font-black text-[#002D62]">0%</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden">
-                <div id="progressBar" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                <div id="progressBar" class="bg-[#002D62] h-full rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
 
+        <!-- Secció de resultats (Transcripció) -->
         <div id="resultSection" class="hidden bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden mb-8 fade-in">
             <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <h3 class="font-bold text-slate-800 flex items-center gap-3">
-                    <i class="fas fa-align-left text-indigo-600"></i> TranscripciÃ³n
+                    <i class="fas fa-align-left text-[#002D62]"></i> Transcripció obtinguda
                 </h3>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <button id="copyBtn" class="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-indigo-50 text-slate-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all">
-                        <i class="fas fa-copy"></i> Copiar
+                    <button id="copyBtn" class="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-blue-50 text-slate-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all">
+                        <i class="fas fa-copy"></i> Copiar text
                     </button>
                     <button id="pdfBtn" class="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-red-50 text-slate-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all">
-                        <i class="fas fa-file-pdf text-red-500"></i> PDF
+                        <i class="fas fa-file-pdf text-red-500"></i> Descarregar PDF
                     </button>
                 </div>
             </div>
@@ -110,35 +141,73 @@
             </div>
         </div>
 
+        <!-- Secció de descàrrega d'MP3 extret -->
         <div id="mp3DownloadSection" class="hidden bg-emerald-50 border border-emerald-200 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center justify-between mb-8 fade-in gap-6">
             <div class="flex items-center gap-5">
                 <div class="w-16 h-16 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
                     <i class="fas fa-check text-2xl"></i>
                 </div>
                 <div>
-                    <h4 class="font-bold text-emerald-900 text-xl">Audio Listo</h4>
-                    <p class="text-emerald-700">El MP3 se ha procesado localmente.</p>
+                    <h4 class="font-bold text-emerald-900 text-xl">Àudio Processat</h4>
+                    <p class="text-emerald-700">L'àudio s'ha extret i codificat a MP3 localment.</p>
                 </div>
             </div>
             <a id="downloadMp3Link" href="#" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-5 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
-                <i class="fas fa-download"></i> Descargar MP3
+                <i class="fas fa-download"></i> Descarregar MP3
             </a>
         </div>
     </div>
 
+    <!-- Modal de Configuració / API Key -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[150] px-4">
+        <div class="bg-white rounded-[2rem] max-w-md w-full p-8 shadow-2xl border border-slate-100 transform transition-all scale-95 duration-200">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <i class="fas fa-key text-[#002D62]"></i> Clau API de Gemini
+                </h3>
+                <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                Per transcriure de franc, necessites la teva clau de Google AI Studio. Les teves dades es desen de forma local en aquest dispositiu i mai es comparteixen amb servidors externs.
+            </p>
+
+            <div class="mb-6">
+                <label for="apiKeyInput" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Google Gemini API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-900 font-mono text-sm transition-all shadow-inner">
+            </div>
+
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="flex items-center gap-2 text-blue-900 hover:text-blue-950 text-sm font-bold mb-6 transition-colors">
+                <i class="fas fa-external-link-alt"></i> Aconsegueix una Clau API Gratuïta aquí
+            </a>
+
+            <div class="flex gap-3">
+                <button id="clearApiKeyBtn" class="flex-1 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 font-bold py-4 px-4 rounded-2xl transition-all">
+                    Esborrar clau
+                </button>
+                <button id="saveApiKeyBtn" class="flex-1 bg-[#002D62] hover:bg-blue-900 text-white font-black py-4 px-4 rounded-2xl transition-all shadow-lg active:scale-95">
+                    Desar clau
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banners d'Instal·lació -->
     <div id="pwaInstallBanner" class="fade-in">
         <div class="flex items-center gap-4 mb-4">
-            <img src="https://cdn-icons-png.flaticon.com/512/3060/3060714.png" class="w-12 h-12 rounded-xl" alt="App Icon">
+            <img src="https://cdn-icons-png.flaticon.com/512/3060/3060714.png" class="w-12 h-12 rounded-xl" alt="Icona App">
             <div class="flex-1">
-                <p class="font-black text-white">Instalar MediaMaster</p>
-                <p id="pwaDesc" class="text-xs text-slate-400">Usa la herramienta como una App nativa.</p>
+                <p class="font-black text-white">Instal·lar Ocom Àudio</p>
+                <p id="pwaDesc" class="text-xs text-slate-400">Utilitza l'eina de transcripció com una App nativa al mòbil.</p>
             </div>
             <button onclick="document.getElementById('pwaInstallBanner').style.display='none'" class="text-slate-500">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        <button id="installActionBtn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
-            AÃ‘ADIR A MI DISPOSITIVO
+        <button id="installActionBtn" class="w-full bg-[#002D62] text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
+            AFEGIR AL DISPOSITIU
         </button>
     </div>
 
@@ -148,14 +217,14 @@
 
     <script>
         const manifest = {
-            "name": "MediaMaster Pro",
-            "short_name": "MediaMaster",
+            "name": "Ocom Àudio Transcripcions",
+            "short_name": "Ocom Àudio",
             "id": "/mediamaster/",
             "start_url": ".",
             "display": "standalone",
             "background_color": "#ffffff",
-            "theme_color": "#4f46e5",
-            "description": "Herramienta profesional de transcripciÃ³n y audio",
+            "theme_color": "#002D62",
+            "description": "Eina professional de transcripció d'àudio i vídeo amb IA",
             "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/3060/3060714.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
         };
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
@@ -193,7 +262,7 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS && !window.navigator.standalone) {
             document.getElementById('pwaInstallBanner').style.display = 'block';
-            document.getElementById('pwaDesc').innerText = "Pulsa 'Compartir' y luego 'AÃ±adir a pantalla de inicio'";
+            document.getElementById('pwaDesc').innerText = "Clica a 'Compartir' i després a 'Afegir a la pantalla d'inici'";
             document.getElementById('installActionBtn').style.display = 'none';
         }
 
@@ -210,8 +279,74 @@
         
         let currentFile = null;
 
+        // Gestió de la API Key en local storage
+        const savedApiKey = localStorage.getItem('mediamaster_api_key');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+
+        function updateApiKeyUI() {
+            const key = localStorage.getItem('mediamaster_api_key');
+            if (key && key.trim().length > 10) {
+                apiKeyStatus.className = "mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
+                apiKeyStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Clau API a punt i segura`;
+                apiKeyInput.value = key;
+            } else {
+                apiKeyStatus.className = "mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200";
+                apiKeyStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Clau API no configurada (Clica l'engranatge ⚙️)`;
+                apiKeyInput.value = "";
+            }
+        }
+
+        updateApiKeyUI();
+
+        // Controladors del Modal de Configuració
+        const settingsModal = document.getElementById('settingsModal');
+        document.getElementById('openSettingsBtn').onclick = () => {
+            settingsModal.classList.remove('hidden');
+        };
+        document.getElementById('closeSettingsBtn').onclick = () => {
+            settingsModal.classList.add('hidden');
+        };
+        document.getElementById('saveApiKeyBtn').onclick = () => {
+            const val = apiKeyInput.value.trim();
+            if (val.length > 0) {
+                localStorage.setItem('mediamaster_api_key', val);
+                showMessage("Clau API desada correctament");
+            } else {
+                localStorage.removeItem('mediamaster_api_key');
+                showMessage("Si us plau, introdueix una clau vàlida");
+            }
+            updateApiKeyUI();
+            settingsModal.classList.add('hidden');
+        };
+        document.getElementById('clearApiKeyBtn').onclick = () => {
+            localStorage.removeItem('mediamaster_api_key');
+            updateApiKeyUI();
+            settingsModal.classList.add('hidden');
+            showMessage("Clau API eliminada");
+        };
+
         dropZone.onclick = () => fileInput.click();
-        fileInput.onchange = (e) => { if (e.target.files.length > 0) handleFileSelect(e.target.files[0]); };
+        
+        // Drag & Drop
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        };
+        dropZone.ondragleave = () => {
+            dropZone.classList.remove('drag-active');
+        };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        };
+
+        fileInput.onchange = (e) => { 
+            if (e.target.files.length > 0) handleFileSelect(e.target.files[0]); 
+        };
 
         function handleFileSelect(file) {
             currentFile = file;
@@ -221,18 +356,27 @@
             resultSection.classList.add('hidden');
             mp3DownloadSection.classList.add('hidden');
             progressState.classList.add('hidden');
-            showMessage("Archivo seleccionado");
+            
+            const icon = document.getElementById('fileIcon');
+            if (file.type.startsWith('video/')) {
+                icon.className = "fas fa-file-video mr-3";
+                showMessage("Vídeo seleccionat correctament");
+            } else {
+                icon.className = "fas fa-file-audio mr-3";
+                showMessage("Àudio seleccionat correctament");
+            }
         }
 
+        // Extracció local de MP3
         document.getElementById('convertBtn').onclick = async () => {
             if (!currentFile) return;
-            showProgress("Extrayendo Audio...", 20);
+            showProgress("Extreient Àudio...", 15);
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const arrayBuffer = await currentFile.arrayBuffer();
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
                 
-                showProgress("Codificando MP3...", 50);
+                showProgress("Codificant MP3...", 45);
                 const mp3encoder = new lamejs.Mp3Encoder(audioBuffer.numberOfChannels, audioBuffer.sampleRate, 128);
                 const mp3Data = [];
                 const left = audioBuffer.getChannelData(0);
@@ -248,7 +392,7 @@
                     }
                     const mp3buf = mp3encoder.encodeBuffer(lChunk, rChunk);
                     if (mp3buf.length > 0) mp3Data.push(mp3buf);
-                    if (i % 50000 === 0) updateProgressBar(50 + Math.floor((i/left.length)*45));
+                    if (i % 100000 === 0) updateProgressBar(45 + Math.floor((i/left.length)*50));
                 }
                 const finalBuf = mp3encoder.flush();
                 if (finalBuf.length > 0) mp3Data.push(finalBuf);
@@ -257,52 +401,80 @@
                 document.getElementById('downloadMp3Link').href = URL.createObjectURL(blob);
                 document.getElementById('downloadMp3Link').download = currentFile.name.split('.')[0] + ".mp3";
                 
-                showProgress("Â¡Listo!", 100);
+                showProgress("Llest!", 100);
                 setTimeout(() => {
                     progressState.classList.add('hidden');
                     mp3DownloadSection.classList.remove('hidden');
                 }, 500);
             } catch (err) {
-                showMessage("Error al procesar", "error");
+                console.error(err);
+                showMessage("Error al processar el fitxer localment.");
+                progressState.classList.add('hidden');
             }
         };
 
+        // Transcripció amb IA de Gemini
         document.getElementById('transcribeBtn').onclick = async () => {
             if (!currentFile) return;
-            showProgress("Analizando con IA...", 30);
+
+            const apiKey = localStorage.getItem('mediamaster_api_key');
+            if (!apiKey || apiKey.trim().length < 5) {
+                settingsModal.classList.remove('hidden');
+                showMessage("Configura primer la teva Clau API");
+                return;
+            }
+
+            // Comprovació de la mida del fitxer per a millor estabilitat d'IA
+            if (currentFile.size > 20 * 1024 * 1024 && currentFile.type.startsWith('video/')) {
+                showMessage("El vídeo és molt gran. Recomanem extreure primer l'àudio MP3 per transcriure.");
+            }
+
+            showProgress("Llegint fitxer...", 15);
             const reader = new FileReader();
             reader.readAsDataURL(currentFile);
             reader.onload = async () => {
                 try {
-                    const text = await callGeminiTranscription(reader.result.split(',')[1], currentFile.type);
+                    showProgress("Processant amb la IA de Google...", 40);
+                    const base64Data = reader.result.split(',')[1];
+                    const text = await callGeminiTranscription(base64Data, currentFile.type, apiKey);
                     transcriptionContent.innerText = text;
-                    showProgress("Completado", 100);
+                    showProgress("Completat", 100);
                     setTimeout(() => {
                         progressState.classList.add('hidden');
                         resultSection.classList.remove('hidden');
                         resultSection.scrollIntoView({ behavior: 'smooth' });
                     }, 500);
                 } catch (e) {
-                    showMessage("Error en IA");
+                    console.error(e);
+                    showMessage("Error de connexió amb la IA. Revisa la clau API.");
                     progressState.classList.add('hidden');
                 }
             };
         };
 
-        async function callGeminiTranscription(base64, mime) {
-            const apiKey = ""; // El usuario debe insertar su clave aquÃ­ o se le pedirÃ¡
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        async function callGeminiTranscription(base64, mime, apiKey) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [
-                        { text: "Transcribe exactamente el contenido hablado de este archivo. Separa por pÃ¡rrafos y si hay varios interlocutores identifÃ­calos como Voz 1, Voz 2. No aÃ±adas comentarios propios." },
+                        { text: "Ets un transcriptor professional en català. Transcriu exactament el contingut parlat d'aquest fitxer multimèdia en llengua catalana (o l'idioma original si és un altre). Estructura el text amb paràgrafs naturals, puntuació correcta i de manera molt formal i neta. Si hi ha múltiples interlocutors, separa'ls indicant 'Ponent 1:', 'Ponent 2:', etc. Retorna només la transcripció neta de l'àudio, sans comentaris d'inici ni de final." },
                         { inlineData: { mimeType: mime, data: base64 } }
                     ]}]
                 })
             });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error?.message || "Error a la petició de Gemini");
+            }
+
             const res = await response.json();
+            if (!res.candidates || res.candidates.length === 0) {
+                throw new Error("No s'ha obtingut resposta de la IA");
+            }
             return res.candidates[0].content.parts[0].text;
         }
 
@@ -313,26 +485,63 @@
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            showMessage("Â¡Copiado!");
+            showMessage("Copiat al porta-retalls!");
         };
 
         document.getElementById('pdfBtn').onclick = () => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const lines = doc.splitTextToSize(transcriptionContent.innerText, 180);
-            doc.text("MediaMaster - TranscripciÃ³n", 15, 15);
+            
+            doc.setFont("Helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("Ocom Àudio - Transcripció", 15, 20);
+            
             doc.setFontSize(10);
-            doc.text(lines, 15, 30);
-            doc.save("transcripcion.pdf");
+            doc.setFont("Helvetica", "normal");
+            doc.text(`Arxiu original: ${currentFile ? currentFile.name : 'Desconegut'}`, 15, 28);
+            
+            doc.setDrawColor(200, 200, 200);
+            doc.line(15, 32, 195, 32);
+
+            const lines = doc.splitTextToSize(transcriptionContent.innerText, 180);
+            
+            let y = 40;
+            const pageHeight = doc.internal.pageSize.height;
+            
+            lines.forEach((line) => {
+                if (y > pageHeight - 20) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(line, 15, y);
+                y += 6;
+            });
+            
+            const name = currentFile ? currentFile.name.split('.')[0] : "transcripcio";
+            doc.save(`${name}_transcripcio.pdf`);
+            showMessage("PDF descarregat!");
         };
 
-        function showProgress(l, p) { progressState.classList.remove('hidden'); progressLabel.innerText = l; updateProgressBar(p); }
-        function updateProgressBar(p) { progressBar.style.width = p+'%'; percentLabel.innerText = p+'%'; }
+        function showProgress(l, p) { 
+            progressState.classList.remove('hidden'); 
+            progressLabel.innerText = l; 
+            updateProgressBar(p); 
+        }
+
+        function updateProgressBar(p) { 
+            progressBar.style.width = p+'%'; 
+            percentLabel.innerText = p+'%'; 
+        }
+
         function showMessage(t) {
             const b = document.getElementById('messageBox');
             document.getElementById('messageText').innerText = t;
             b.classList.remove('translate-y-32', 'hidden');
-            setTimeout(() => b.classList.add('translate-y-32'), 2500);
+            b.classList.add('translate-y-0');
+            setTimeout(() => {
+                b.classList.remove('translate-y-0');
+                b.classList.add('translate-y-32');
+            }, 3000);
         }
     </script>
 </body>
